@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>เบิกของอุปโภคบริโภค สำนักงาน NTL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0; --surface: #FFFFFF; --grain: #F0EDE5;
+    --ink: #1A1B22; --ink-soft: #4A4B55; --ink-mute: #8A8B95; --line: #E2DED3;
+    --primary: #1F3D2B; --primary-ink: #16291D; --primary-soft: #E5EDE7;
+    --accent: #E85D2F; --accent-ink: #B8431C; --accent-soft: #FBE8E0;
+    --ok: #2E7D52; --ok-soft: #E3F0E8; --danger: #D84B3A; --warn: #D88B1F;
+    --font: 'IBM Plex Sans Thai', 'Plus Jakarta Sans', sans-serif;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--ink);
+    min-height: 100vh; font-size: 15px; line-height: 1.5;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .hdr {
+    background: linear-gradient(135deg, var(--primary) 0%, #14241A 100%);
+    color: #F7F5F0; padding: 18px 20px; position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hdr .mk { width: 42px; height: 42px; border-radius: 11px; background: rgba(247,245,240,.15);
+    display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+  .hdr h1 { font-size: 16px; font-weight: 700; line-height: 1.25; }
+  .hdr .sub { font-size: 11px; opacity: .7; margin-top: 1px; }
+  .hdr .who { margin-left: auto; text-align: right; font-size: 11px; opacity: .85; }
+  .hdr .who b { display: block; font-size: 13px; }
+
+  .body { flex: 1; padding: 20px; }
+  .screen { display: none; animation: fade .3s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* Login */
+  .login-card { background: var(--surface); border-radius: 18px; padding: 28px 24px; box-shadow: 0 8px 30px -12px rgba(0,0,0,.15); margin-top: 24px; }
+  .login-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .login-card p.lead { font-size: 13px; color: var(--ink-mute); margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin: 12px 0 6px; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 11px;
+    font-family: inherit; font-size: 16px; background: var(--grain); color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--primary); background: var(--surface); }
+  .err { font-size: 13px; color: var(--danger); min-height: 18px; margin-top: 8px; font-weight: 500; }
+
+  .btn {
+    width: 100%; padding: 15px; border: none; border-radius: 12px; font-family: inherit;
+    font-size: 16px; font-weight: 700; cursor: pointer; transition: all .15s; margin-top: 8px;
+  }
+  .btn-primary { background: var(--primary); color: #F7F5F0; }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-ghost { background: var(--grain); color: var(--ink-soft); border: 1.5px solid var(--line); }
+  .btn:disabled { opacity: .55; }
+
+  .step-label { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--accent-ink);
+    text-transform: uppercase; margin-bottom: 6px; }
+  .screen h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .screen .desc { font-size: 13px; color: var(--ink-mute); margin-bottom: 18px; }
+
+  /* Building grid */
+  .bld-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bld-opt {
+    background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius);
+    padding: 20px 16px; text-align: center; cursor: pointer; transition: all .15s;
+    font-weight: 700; font-size: 16px;
+  }
+  .bld-opt .ic { font-size: 28px; display: block; margin-bottom: 8px; }
+  .bld-opt.sel { border-color: var(--primary); background: var(--primary-soft); }
+
+  /* Floor chips */
+  .floor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 10px; }
+  .floor-card {
+    background: var(--surface); border: 2px solid var(--line); border-radius: 12px;
+    padding: 14px 8px; text-align: center; cursor: pointer; position: relative; transition: all .15s;
+  }
+  .floor-card .fl-no { font-size: 19px; font-weight: 800; }
+  .floor-card .fl-lbl { font-size: 10px; color: var(--ink-mute); }
+  .floor-card.done { border-color: var(--ok); background: var(--ok-soft); }
+  .floor-card.done::after {
+    content: '✓'; position: absolute; top: 5px; right: 7px; color: var(--ok);
+    font-weight: 800; font-size: 13px;
+  }
+  .floor-card .badge-cnt {
+    position: absolute; top: -7px; right: -7px; background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 999px;
+    display: grid; place-items: center; padding: 0 5px;
+  }
+
+  .info-bar {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between;
+    align-items: center; gap: 10px; font-size: 13px;
+  }
+  .info-bar .k { color: var(--ink-mute); font-size: 11px; }
+  .info-bar .v { font-weight: 700; font-size: 15px; }
+
+  /* Item list */
+  .search-box { position: relative; margin-bottom: 14px; }
+  .search-box input { padding-left: 40px; }
+  .search-box span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-mute); }
+  .item-row {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+  }
+  .item-row.has-qty { border-color: var(--accent); background: var(--accent-soft); }
+  .item-row .ir-num {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--grain); flex-shrink: 0;
+    display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--ink-mute);
+  }
+  .item-row .ir-info { flex: 1; min-width: 0; }
+  .item-row .ir-name { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .item-row .ir-unit { font-size: 11px; color: var(--ink-mute); margin-top: 1px; }
+  .qty-ctrl { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .qty-ctrl button {
+    width: 36px; height: 36px; border: 1.5px solid var(--line); background: var(--surface);
+    border-radius: 9px; font-size: 20px; font-weight: 700; color: var(--primary); cursor: pointer;
+  }
+  .qty-ctrl button:active { background: var(--primary-soft); }
+  .qty-ctrl input {
+    width: 56px; text-align: center; padding: 8px 4px; border: 1.5px solid var(--line);
+    border-radius: 9px; font-family: inherit; font-size: 16px; font-weight: 700; background: var(--grain);
+  }
+  .qty-ctrl input:focus { outline: none; border-color: var(--accent); background: #fff; }
+
+  /* Sticky footer bar */
+  .foot-bar {
+    position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+    padding: 14px 20px; display: flex; gap: 10px; align-items: center;
+    box-shadow: 0 -4px 16px -8px rgba(0,0,0,.12);
+  }
+  .foot-bar .summary { flex: 1; font-size: 13px; }
+  .foot-bar .summary b { font-size: 18px; }
+  .foot-bar .btn { width: auto; margin: 0; padding: 13px 22px; white-space: nowrap; }
+
+  /* Summary screen */
+  .sum-group { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  .sum-group .sg-head { background: var(--primary-soft); padding: 10px 14px; font-weight: 700; font-size: 14px; color: var(--primary-ink); }
+  .sum-line { padding: 9px 14px; display: flex; justify-content: space-between; border-top: 1px solid var(--line); font-size: 13px; }
+  .sum-line .q { font-weight: 700; }
+
+  .done-screen { text-align: center; padding-top: 50px; }
+  .done-screen .check { width: 80px; height: 80px; border-radius: 50%; background: var(--ok-soft); color: var(--ok);
+    display: grid; place-items: center; font-size: 42px; margin: 0 auto 20px; }
+  .done-screen h2 { font-size: 22px; }
+  .done-screen .req-id { font-family: monospace; font-size: 14px; color: var(--ink-mute); margin-top: 8px; }
+
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity .25s;
+    white-space: nowrap; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; }
+  .loading { text-align: center; padding: 60px 20px; color: var(--ink-mute); }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--line); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 600;
+    font-size: 14px; cursor: pointer; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="mk">📦</div>
+    <div>
+      <h1>เบิกของอุปโภคบริโภค</h1>
+      <div class="sub">สำนักงาน NTL · บริการกลาง 3</div>
+    </div>
+    <div class="who" id="whoBox" style="display:none">
+      <span>ผู้เบิก</span>
+      <b id="whoName">—</b>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- ── SCREEN 1: LOGIN ── -->
+    <div class="screen active" id="scLogin">
+      <div class="login-card">
+        <h2>เข้าสู่ระบบ</h2>
+        <p class="lead">กรอกชื่อผู้ใช้งานและรหัสผ่านเพื่อเริ่มทำรายการเบิก</p>
+        <label>ชื่อผู้ใช้งาน</label>
+        <input type="text" id="inUser" placeholder="ชื่อผู้ใช้งาน" autocomplete="username"
+          onkeydown="if(event.key==='Enter')document.getElementById('inPass').focus()">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="inPass" placeholder="รหัสผ่าน" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="err" id="loginErr"></div>
+        <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 2: SELECT BUILDING ── -->
+    <div class="screen" id="scBuilding">
+      <div class="step-label">ขั้นตอนที่ 1</div>
+      <h2>เลือกอาคาร</h2>
+      <p class="desc">เลือกอาคารที่ต้องการเบิกของ แล้วกดยืนยัน</p>
+      <div class="bld-grid" id="bldGrid"></div>
+      <button class="btn btn-primary" id="bldConfirm" onclick="confirmBuilding()" disabled style="margin-top:20px">ยืนยันอาคาร</button>
+    </div>
+
+    <!-- ── SCREEN 3: SELECT FLOOR ── -->
+    <div class="screen" id="scFloor">
+      <span class="back-link" onclick="goBuilding()">← เปลี่ยนอาคาร</span>
+      <div class="step-label">ขั้นตอนที่ 2</div>
+      <h2>เลือกชั้น <span id="flBldName" style="color:var(--accent)"></span></h2>
+      <p class="desc">แตะที่ชั้นเพื่อกรอกรายการเบิก · ✓ = กรอกแล้ว สามารถเบิกหลายชั้นในครั้งเดียว</p>
+      <div class="info-bar">
+        <div><div class="k">วันที่ทำรายการ</div><div class="v" id="reqDateText">—</div></div>
+        <div style="text-align:right"><div class="k">ชั้นที่กรอกแล้ว</div><div class="v" id="floorDoneCount">0 ชั้น</div></div>
+      </div>
+      <div class="floor-grid" id="floorGrid"></div>
+    </div>
+
+    <!-- ── SCREEN 4: ITEM ENTRY ── -->
+    <div class="screen" id="scItems">
+      <span class="back-link" onclick="goFloor()">← กลับไปเลือกชั้น</span>
+      <div class="step-label">ขั้นตอนที่ 3 · กรอกจำนวน</div>
+      <h2><span id="itBldName"></span> ชั้น <span id="itFloorName" style="color:var(--accent)"></span></h2>
+      <p class="desc">กรอกจำนวนที่ต้องการเบิก (จำนวนเต็มเท่านั้น)</p>
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="itemSearch" placeholder="ค้นหาสินค้า…" oninput="renderItems()">
+      </div>
+      <div id="itemList"></div>
+    </div>
+
+    <!-- ── SCREEN 5: SUMMARY ── -->
+    <div class="screen" id="scSummary">
+      <span class="back-link" onclick="goFloor()">← กลับไปแก้ไข</span>
+      <div class="step-label">ขั้นตอนสุดท้าย · ตรวจสอบ</div>
+      <h2>สรุปคำขอเบิก</h2>
+      <p class="desc" id="sumMeta">—</p>
+      <div id="sumList"></div>
+    </div>
+
+    <!-- ── SCREEN 6: DONE ── -->
+    <div class="screen" id="scDone">
+      <div class="done-screen">
+        <div class="check">✓</div>
+        <h2>ส่งคำขอเรียบร้อย</h2>
+        <p class="desc">คำขอเบิกของคุณถูกบันทึกแล้ว</p>
+        <div class="req-id" id="doneReqId"></div>
+        <button class="btn btn-primary" onclick="resetAll()" style="margin-top:28px; max-width:280px; margin-left:auto; margin-right:auto">ทำรายการใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky footer (floor screen) -->
+  <div class="foot-bar" id="footFloor" style="display:none">
+    <div class="summary">
+      <div style="font-size:11px; color:var(--ink-mute)">รวมที่กรอกแล้ว</div>
+      <b id="grandTotal">0</b> รายการ · <span id="grandFloors">0</span> ชั้น
+    </div>
+    <button class="btn btn-primary" id="reviewBtn" onclick="goSummary()" disabled>ตรวจสอบ &amp; ส่ง</button>
+  </div>
+
+  <!-- Sticky footer (item screen) -->
+  <div class="foot-bar" id="footItems" style="display:none">
+    <div class="summary">
+      <div style="font-size:11px; color:var(--ink-mute)">ชั้นนี้</div>
+      <b id="floorItemCount">0</b> รายการ
+    </div>
+    <button class="btn btn-accent" onclick="saveFloorItems()">บันทึกชั้นนี้</button>
+  </div>
+
+  <!-- Sticky footer (summary screen) -->
+  <div class="foot-bar" id="footSummary" style="display:none">
+    <button class="btn btn-primary" id="submitBtn" onclick="submitRequest()" style="width:100%">ส่งคำขอเบิก</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxttBj_VizOnV6TEXE_Yym5xIp9c9x-rzxLqaXaLpEm-_vSTwuM6V8ffzpHdgRRWXXV/exec";
+
+let user = null;
+let setup = { buildings: [], floors: {}, items: [] };
+let selectedBuilding = null;
+let selectedBuildingDraft = null;
+let currentFloor = null;
+let requestDate = '';
+// data[floor] = { itemId: qty }
+let data = {};
+let floorDraft = {};   // ระหว่างกรอกชั้นปัจจุบัน
+
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active');
+  $('footFloor').style.display='none'; $('footItems').style.display='none'; $('footSummary').style.display='none'; }
+let toastT;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+function todayThai(){ const d=new Date(); return d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'}); }
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+async function gasGet(action, params){
+  const qs = new URLSearchParams(Object.assign({action}, params||{})).toString();
+  const res = await fetch(GAS_URL+'?'+qs, { method:'GET', redirect:'follow' });
+  return res.json();
+}
+async function gasPost(action, payload){
+  const res = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({action}, payload||{})), redirect:'follow' });
+  return res.json();
+}
+
+/* ---------- 1. LOGIN ---------- */
+async function doLogin(){
+  const u = ($('inUser').value||'').trim().toLowerCase();
+  const p = $('inPass').value||'';
+  const err = $('loginErr'); const btn = $('loginBtn');
+  if(!u||!p){ err.textContent='⚠️ กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน'; return; }
+  err.style.color='var(--ink-mute)'; err.textContent='⏳ กำลังตรวจสอบ…'; btn.disabled=true;
+  try {
+    const r = await gasGet('verifyLogin', { username:u, password:p });
+    if(!r.ok){ err.style.color='var(--danger)'; err.textContent='⚠️ '+(r.error||'เข้าสู่ระบบไม่สำเร็จ'); btn.disabled=false; return; }
+    user = r.user;
+    $('whoName').textContent = user.name;
+    $('whoBox').style.display='block';
+    btn.disabled=false;
+    await loadSetup();
+  } catch(e){
+    err.style.color='var(--danger)'; err.textContent='🔴 เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ต'; btn.disabled=false;
+  }
+}
+
+async function loadSetup(){
+  show('scBuilding');
+  $('bldGrid').innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลดข้อมูล…</div>';
+  try {
+    const r = await gasGet('getWithdrawSetup');
+    if(!r.ok) throw new Error('setup failed');
+    setup = r;
+    requestDate = todayKey();
+    renderBuildings();
+  } catch(e){
+    $('bldGrid').innerHTML = '<div class="loading">โหลดข้อมูลไม่ได้ ลองใหม่อีกครั้ง</div>';
+    toast('โหลดข้อมูลไม่สำเร็จ');
+  }
+}
+
+/* ---------- 2. BUILDING ---------- */
+function renderBuildings(){
+  selectedBuildingDraft = null;
+  $('bldConfirm').disabled = true;
+  $('bldGrid').innerHTML = setup.buildings.map(b =>
+    `<div class="bld-opt" data-b="${b}" onclick="pickBuilding('${b.replace(/'/g,"\\'")}')"><span class="ic">🏢</span>${b}</div>`
+  ).join('');
+}
+function pickBuilding(b){
+  selectedBuildingDraft = b;
+  document.querySelectorAll('.bld-opt').forEach(el => el.classList.toggle('sel', el.dataset.b===b));
+  $('bldConfirm').disabled = false;
+}
+function confirmBuilding(){
+  if(!selectedBuildingDraft) return;
+  selectedBuilding = selectedBuildingDraft;
+  data = {};
+  goFloor();
+}
+function goBuilding(){ show('scBuilding'); renderBuildings();
+  if(selectedBuilding){ selectedBuildingDraft=selectedBuilding; pickBuilding(selectedBuilding);} }
+
+/* ---------- 3. FLOOR ---------- */
+function goFloor(){
+  show('scFloor');
+  $('flBldName').textContent = selectedBuilding;
+  $('reqDateText').textContent = todayThai();
+  $('footFloor').style.display='flex';
+  renderFloors();
+}
+function floorItemCount(fl){ const d=data[fl]||{}; return Object.values(d).filter(q=>q>0).length; }
+function renderFloors(){
+  const floors = setup.floors[selectedBuilding] || [];
+  $('floorGrid').innerHTML = floors.map(fl => {
+    const cnt = floorItemCount(fl);
+    return `<div class="floor-card ${cnt>0?'done':''}" onclick="openFloor('${String(fl).replace(/'/g,"\\'")}')">
+      ${cnt>0?`<span class="badge-cnt">${cnt}</span>`:''}
+      <div class="fl-no">${fl}</div><div class="fl-lbl">ชั้น</div>
+    </div>`;
+  }).join('');
+  const doneFloors = floors.filter(fl=>floorItemCount(fl)>0).length;
+  const totalItems = floors.reduce((s,fl)=>s+floorItemCount(fl),0);
+  $('floorDoneCount').textContent = doneFloors+' / '+floors.length+' ชั้น';
+  $('grandTotal').textContent = totalItems;
+  $('grandFloors').textContent = doneFloors;
+  $('reviewBtn').disabled = totalItems===0;
+}
+
+/* ---------- 4. ITEM ENTRY ---------- */
+function openFloor(fl){
+  currentFloor = fl;
+  floorDraft = Object.assign({}, data[fl]||{});
+  show('scItems');
+  $('itBldName').textContent = selectedBuilding;
+  $('itFloorName').textContent = fl;
+  $('itemSearch').value='';
+  $('footItems').style.display='flex';
+  renderItems();
+}
+function renderItems(){
+  const q = ($('itemSearch').value||'').toLowerCase();
+  let items = setup.items;
+  if(q) items = items.filter(it => String(it.item_name).toLowerCase().includes(q));
+  $('itemList').innerHTML = items.map(it => {
+    const qty = floorDraft[it.item_id]||0;
+    return `<div class="item-row ${qty>0?'has-qty':''}" id="irow-${it.item_id}">
+      <div class="ir-num">${String(it.item_id).padStart(2,'0')}</div>
+      <div class="ir-info"><div class="ir-name">${it.item_name}</div><div class="ir-unit">หน่วย: ${it.unit}</div></div>
+      <div class="qty-ctrl">
+        <button onclick="adjItem(${it.item_id},-1)">−</button>
+        <input type="number" inputmode="numeric" pattern="[0-9]*" min="0" step="1" value="${qty}"
+          onfocus="this.select()" onkeydown="blockDec(event)" oninput="setItem(${it.item_id}, this.value)">
+        <button onclick="adjItem(${it.item_id},1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateFloorCount();
+}
+function blockDec(e){ if(['.',',','e','E','+','-'].includes(e.key)) e.preventDefault(); }
+function adjItem(id, d){
+  const cur = floorDraft[id]||0;
+  floorDraft[id] = Math.max(0, cur+d);
+  renderItems();
+}
+function setItem(id, val){
+  const cleaned = String(val).replace(/[^\d]/g,'');
+  const n = parseInt(cleaned,10);
+  floorDraft[id] = (isNaN(n)||n<0)?0:n;
+  const row = $('irow-'+id);
+  if(row) row.classList.toggle('has-qty', floorDraft[id]>0);
+  updateFloorCount();
+}
+function updateFloorCount(){
+  $('floorItemCount').textContent = Object.values(floorDraft).filter(q=>q>0).length;
+}
+function saveFloorItems(){
+  const clean = {};
+  Object.keys(floorDraft).forEach(id => { if(floorDraft[id]>0) clean[id]=floorDraft[id]; });
+  if(Object.keys(clean).length>0) data[currentFloor] = clean;
+  else delete data[currentFloor];
+  toast(Object.keys(clean).length>0 ? `บันทึกชั้น ${currentFloor} แล้ว` : `ล้างรายการชั้น ${currentFloor}`);
+  goFloor();
+}
+
+/* ---------- 5. SUMMARY ---------- */
+function goSummary(){
+  show('scSummary');
+  $('footSummary').style.display='flex';
+  const itemMap = {}; setup.items.forEach(it=>itemMap[it.item_id]=it);
+  const floors = Object.keys(data).sort((a,b)=> (setup.floors[selectedBuilding].indexOf(a)) - (setup.floors[selectedBuilding].indexOf(b)));
+  let totalItems=0, totalQty=0;
+  $('sumList').innerHTML = floors.map(fl => {
+    const d = data[fl];
+    const lines = Object.keys(d).map(id => {
+      const it = itemMap[id]; totalItems++; totalQty += d[id];
+      return `<div class="sum-line"><span>${it?it.item_name:id}</span><span class="q">${d[id]} ${it?it.unit:''}</span></div>`;
+    }).join('');
+    return `<div class="sum-group"><div class="sg-head">ชั้น ${fl} · ${Object.keys(d).length} รายการ</div>${lines}</div>`;
+  }).join('');
+  $('sumMeta').textContent = `${selectedBuilding} · ${todayThai()} · ผู้เบิก ${user.name} · รวม ${totalItems} รายการ ${totalQty} หน่วย`;
+}
+
+/* ---------- 6. SUBMIT ---------- */
+async function submitRequest(){
+  const btn = $('submitBtn'); btn.disabled=true; btn.textContent='⏳ กำลังส่ง…';
+  const itemMap = {}; setup.items.forEach(it=>itemMap[it.item_id]=it);
+  const lines = [];
+  Object.keys(data).forEach(fl => {
+    Object.keys(data[fl]).forEach(id => {
+      const it = itemMap[id];
+      lines.push({ floor: fl, item_id: Number(id), item_name: it?it.item_name:'', unit: it?it.unit:'', qty: data[fl][id] });
+    });
+  });
+  try {
+    const r = await gasPost('submitWithdraw', {
+      building: selectedBuilding, requester: user.name, request_date: requestDate, lines
+    });
+    if(!r.ok) throw new Error(r.error||'ส่งไม่สำเร็จ');
+    $('doneReqId').textContent = 'เลขที่คำขอ: '+r.request_id;
+    show('scDone');
+  } catch(e){
+    toast('ส่งคำขอไม่สำเร็จ: '+e.message);
+    btn.disabled=false; btn.textContent='ส่งคำขอเบิก';
+  }
+}
+
+function resetAll(){
+  selectedBuilding=null; selectedBuildingDraft=null; currentFloor=null; data={}; floorDraft={};
+  show('scBuilding'); renderBuildings();
+}
+</script>
+</body>
+</html>
