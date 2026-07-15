@@ -89,16 +89,6 @@
     font-family: inherit; font-size: 16px; background: var(--grain); color: var(--ink);
   }
   input:focus { outline: none; border-color: var(--primary); background: var(--surface); }
-  .pass-wrap { position: relative; }
-  .pass-wrap input { padding-right: 48px; }
-  .pass-toggle {
-    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-    width: 38px; height: 38px; border: none; background: transparent; cursor: pointer;
-    font-size: 18px; color: var(--ink-mute); display: grid; place-items: center;
-    border-radius: 9px; line-height: 1; transition: background .15s, color .15s; opacity: .65;
-  }
-  .pass-toggle:active { background: var(--grain); }
-  .pass-toggle.on { color: var(--primary); opacity: 1; }
   .err { font-size: 13px; color: var(--danger); min-height: 18px; margin-top: 8px; font-weight: 500; }
 
   .btn {
@@ -216,21 +206,75 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 600;
     font-size: 14px; cursor: pointer; margin-bottom: 14px; }
+
+  /* Menu (เลือกส่วนงาน) */
+  .menu-card {
+    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+    background: var(--surface); border: 2px solid var(--line); border-radius: 16px;
+    padding: 18px 16px; margin-bottom: 12px; cursor: pointer; font-family: inherit;
+    transition: all .15s;
+  }
+  .menu-card:active { transform: scale(.985); }
+  .menu-card .mi {
+    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 26px;
+  }
+  .menu-card.withdraw .mi { background: var(--accent-soft); }
+  .menu-card.water .mi { background: #E3EDF5; }
+  .menu-card .mt { font-size: 15.5px; font-weight: 700; }
+  .menu-card .md { font-size: 12px; color: var(--ink-mute); margin-top: 2px; line-height: 1.4; }
+  .menu-card .arrow { margin-left: auto; color: var(--ink-mute); font-size: 18px; }
+  .menu-locked {
+    background: var(--grain); border: 1.5px dashed var(--line); border-radius: 16px;
+    padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--ink-mute);
+  }
+  .menu-card.locked {
+    cursor: not-allowed; pointer-events: none;
+    background: var(--grain); border-style: dashed;
+    filter: grayscale(1); opacity: .55;
+  }
+  .menu-card.locked .mi { background: var(--line) !important; }
+  .menu-card.locked .arrow { display: none; }
+  .menu-card .lock-tag {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 11px; font-weight: 700; color: var(--ink-mute);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px 10px; white-space: nowrap;
+  }
+
+  /* Water rows */
+  .wfl-row {
+    background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+    transition: all .15s;
+  }
+  .wfl-row.has-qty { border-color: var(--primary); background: var(--primary-soft); }
+  .wfl-row .wname { flex: 1; font-size: 15px; font-weight: 700; }
+  .date-row {
+    background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .date-row label { margin: 0; flex: 1; }
+  .date-row input[type=date], .date-row select {
+    padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 9px;
+    font-family: inherit; font-size: 14px; background: var(--grain); color: var(--ink);
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hdr">
-    <div class="mk">📦</div>
+    <div class="mk" id="hdrIcon">🏢</div>
     <div class="hdr-title">
-      <h1>เบิกของอุปโภคบริโภค</h1>
-      <div class="sub">สำนักงาน NTL · บริการกลาง 3</div>
+      <h1 id="hdrTitle">ระบบบริการกลาง 3</h1>
+      <div class="sub" id="hdrSub">สำนักงาน NTL · บริการกลาง 3</div>
     </div>
     <div class="hdr-right">
       <span class="conn-badge checking" id="connBadge"><span class="dot"></span>กำลังตรวจสอบ…</span>
       <div class="who" id="whoBox" style="display:none">
         <div style="text-align:right">
-          <span>ผู้เบิก</span>
+          <span>ผู้ใช้งาน</span>
           <b id="whoName">—</b>
         </div>
         <button class="logout-btn" id="logoutBtn" onclick="doLogout()" title="ออกจากระบบ"><span class="lo-ic">⏻</span>ออกจากระบบ</button>
@@ -248,12 +292,8 @@
         <input type="text" id="inUser" placeholder="ชื่อผู้ใช้งาน" autocomplete="username"
           onkeydown="if(event.key==='Enter')document.getElementById('inPass').focus()">
         <label>รหัสผ่าน</label>
-        <div class="pass-wrap">
-          <input type="password" id="inPass" placeholder="รหัสผ่าน" autocomplete="current-password"
-            onkeydown="if(event.key==='Enter')doLogin()">
-          <button type="button" class="pass-toggle" id="passToggle" onclick="togglePass()"
-            title="แสดง/ซ่อนรหัสผ่าน" aria-label="แสดงรหัสผ่าน">👁</button>
-        </div>
+        <input type="password" id="inPass" placeholder="รหัสผ่าน" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()">
         <div class="err" id="loginErr"></div>
         <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
         <div class="help-note">
@@ -263,9 +303,18 @@
       </div>
     </div>
 
+    <!-- ── SCREEN: MENU (เลือกส่วนงาน) ── -->
+    <div class="screen" id="scMenu">
+      <div class="step-label">เมนูหลัก</div>
+      <h2>เลือกส่วนงาน</h2>
+      <p class="desc">เลือกส่วนงานที่ต้องการทำรายการ · สิทธิ์การเข้าใช้กำหนดโดยผู้ดูแลระบบ</p>
+      <div id="menuList"></div>
+    </div>
+
     <!-- ── SCREEN 2: SELECT BUILDING ── -->
     <div class="screen" id="scBuilding">
-      <div class="step-label">ขั้นตอนที่ 1</div>
+      <span class="back-link" onclick="goMenu()">← กลับเมนูหลัก</span>
+      <div class="step-label">เบิกของ · ขั้นตอนที่ 1</div>
       <h2>เลือกอาคาร</h2>
       <p class="desc">เลือกอาคารที่ต้องการเบิกของ แล้วกดยืนยัน</p>
       <div class="bld-grid" id="bldGrid"></div>
@@ -307,6 +356,48 @@
       <div id="sumList"></div>
     </div>
 
+    <!-- ── WATER SCREEN 1: SELECT BUILDING ── -->
+    <div class="screen" id="scWBuilding">
+      <span class="back-link" onclick="goMenu()">← กลับเมนูหลัก</span>
+      <div class="step-label">ส่งน้ำดื่ม · ขั้นตอนที่ 1</div>
+      <h2>เลือกอาคาร</h2>
+      <p class="desc">เลือกอาคารที่จัดส่งน้ำดื่ม แล้วกดยืนยัน</p>
+      <div class="bld-grid" id="wBldGrid"></div>
+      <button class="btn btn-primary" id="wBldConfirm" onclick="wConfirmBuilding()" disabled style="margin-top:20px">ยืนยันอาคาร</button>
+    </div>
+
+    <!-- ── WATER SCREEN 2: FLOORS QTY ── -->
+    <div class="screen" id="scWFloors">
+      <span class="back-link" onclick="goWBuilding()">← เปลี่ยนอาคาร</span>
+      <div class="step-label">ส่งน้ำดื่ม · ขั้นตอนที่ 2</div>
+      <h2>บันทึกจำนวน <span id="wBldName" style="color:var(--primary)"></span></h2>
+      <p class="desc">กรอกจำนวนน้ำดื่มที่ส่งแต่ละชั้น (จำนวนเต็ม) · ชั้นที่ไม่ได้ส่งปล่อยเป็น 0</p>
+      <div class="date-row">
+        <label>วันที่จัดส่ง</label>
+        <input type="date" id="wDate">
+        <select id="wUnit" onchange="updateWSummary()">
+          <option value="ถัง">ถัง</option>
+          <option value="แพ็ค">แพ็ค</option>
+          <option value="ขวด">ขวด</option>
+        </select>
+      </div>
+      <div id="wFloorList"></div>
+      <label>หมายเหตุ (ไม่บังคับ)</label>
+      <input type="text" id="wNote" placeholder="เช่น ส่งเพิ่มรอบบ่าย">
+    </div>
+
+    <!-- ── WATER SCREEN 3: DONE ── -->
+    <div class="screen" id="scWDone">
+      <div class="done-screen">
+        <div class="check">✓</div>
+        <h2>บันทึกการส่งน้ำเรียบร้อย</h2>
+        <p class="desc" id="wDoneText">—</p>
+        <div class="req-id" id="wDoneId"></div>
+        <button class="btn btn-primary" onclick="startWater()" style="margin-top:28px; max-width:280px; margin-left:auto; margin-right:auto">บันทึกรอบใหม่</button>
+        <button class="btn btn-ghost" onclick="goMenu()" style="margin-top:10px; max-width:280px; margin-left:auto; margin-right:auto">กลับเมนูหลัก</button>
+      </div>
+    </div>
+
     <!-- ── SCREEN 6: DONE ── -->
     <div class="screen" id="scDone">
       <div class="done-screen">
@@ -314,7 +405,8 @@
         <h2>ส่งคำขอเรียบร้อย</h2>
         <p class="desc">คำขอเบิกของคุณถูกบันทึกแล้ว</p>
         <div class="req-id" id="doneReqId"></div>
-        <button class="btn btn-primary" onclick="resetAll()" style="margin-top:28px; max-width:280px; margin-left:auto; margin-right:auto">ทำรายการใหม่</button>
+        <button class="btn btn-primary" onclick="resetAll()" style="margin-top:28px; max-width:280px; margin-left:auto; margin-right:auto">ทำรายการเบิกใหม่</button>
+        <button class="btn btn-ghost" onclick="goMenu()" style="margin-top:10px; max-width:280px; margin-left:auto; margin-right:auto">กลับเมนูหลัก</button>
       </div>
     </div>
   </div>
@@ -335,6 +427,15 @@
       <b id="floorItemCount">0</b> รายการ
     </div>
     <button class="btn btn-accent" onclick="saveFloorItems()">บันทึกชั้นนี้</button>
+  </div>
+
+  <!-- Sticky footer (water floors screen) -->
+  <div class="foot-bar" id="footWater" style="display:none">
+    <div class="summary">
+      <div style="font-size:11px; color:var(--ink-mute)">รวมที่กรอก</div>
+      <b id="wGrandTotal">0</b> <span id="wUnitLabel">ถัง</span> · <span id="wGrandFloors">0</span> ชั้น
+    </div>
+    <button class="btn btn-primary" id="wSubmitBtn" onclick="submitWater()" disabled>บันทึกการส่ง</button>
   </div>
 
   <!-- Sticky footer (summary screen) -->
@@ -361,7 +462,7 @@ let floorDraft = {};   // ระหว่างกรอกชั้นปัจ
 /* ---------- helpers ---------- */
 function $(id){ return document.getElementById(id); }
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active');
-  $('footFloor').style.display='none'; $('footItems').style.display='none'; $('footSummary').style.display='none'; }
+  $('footFloor').style.display='none'; $('footItems').style.display='none'; $('footSummary').style.display='none'; $('footWater').style.display='none'; }
 let toastT;
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
 function todayThai(){ const d=new Date(); return d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'}); }
@@ -403,15 +504,6 @@ checkConn();
 setInterval(checkConn, 30000);
 
 /* ---------- 1. LOGIN ---------- */
-function togglePass(){
-  const inp = $('inPass'); const btn = $('passToggle');
-  const showing = inp.type === 'text';
-  inp.type = showing ? 'password' : 'text';
-  btn.textContent = showing ? '👁' : '🙈';
-  btn.classList.toggle('on', !showing);
-  btn.setAttribute('aria-label', showing ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน');
-  inp.focus();
-}
 async function doLogin(){
   const u = ($('inUser').value||'').trim().toLowerCase();
   const p = $('inPass').value||'';
@@ -426,7 +518,7 @@ async function doLogin(){
     $('whoName').textContent = user.name;
     $('whoBox').style.display='flex';
     btn.disabled=false;
-    await loadSetup();
+    goMenu();
   } catch(e){
     setConnStatus('off');
     err.style.color='var(--danger)'; err.textContent='🔴 เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ต'; btn.disabled=false;
@@ -599,16 +691,169 @@ function resetAll(){
   show('scBuilding'); renderBuildings();
 }
 
+/* ---------- MENU (เลือกส่วนงาน) ---------- */
+function canWithdraw(){ return user && user.idx_withdraw !== false; }
+function canWater(){ return user && user.idx_water !== false; }
+
+function goMenu(){
+  show('scMenu');
+  $('hdrIcon').textContent = '🏢';
+  $('hdrTitle').textContent = 'ระบบบริการกลาง 3';
+  $('hdrSub').textContent = 'สำนักงาน NTL · บริการกลาง 3';
+  // แสดงทุกส่วนงานเสมอ — ส่วนที่ไม่มีสิทธิ์จะเป็นสีเทาและกดไม่ได้
+  const card = (cls, icon, title, desc, allowed, onclick) => allowed
+    ? `<button class="menu-card ${cls}" onclick="${onclick}">
+        <span class="mi">${icon}</span>
+        <span><span class="mt">${title}</span><span class="md" style="display:block">${desc}</span></span>
+        <span class="arrow">→</span>
+      </button>`
+    : `<div class="menu-card ${cls} locked" aria-disabled="true">
+        <span class="mi">${icon}</span>
+        <span><span class="mt">${title}</span><span class="md" style="display:block">${desc}</span></span>
+        <span class="lock-tag">🔒 ไม่มีสิทธิ์</span>
+      </div>`;
+  const parts = [
+    card('withdraw', '📦', 'เบิกของอุปโภคบริโภค', 'ทำรายการเบิกของแยกรายชั้น ส่งให้ Admin อนุมัติ', canWithdraw(), 'startWithdraw()'),
+    card('water', '🚰', 'บันทึกส่งน้ำดื่ม', 'บันทึกจำนวนน้ำดื่มที่จัดส่งแต่ละชั้นของอาคาร', canWater(), 'startWater()'),
+  ];
+  if (!canWithdraw() && !canWater())
+    parts.push('<div class="menu-locked">🔒 บัญชีของคุณยังไม่ได้รับสิทธิ์เข้าใช้ส่วนงานใด · ติดต่อ GNR Admin เพื่อขอเปิดสิทธิ์</div>');
+  $('menuList').innerHTML = parts.join('');
+}
+
+function startWithdraw(){
+  if (!canWithdraw()){ toast('บัญชีนี้ไม่มีสิทธิ์เบิกของ · ติดต่อ GNR Admin'); return; }
+  $('hdrIcon').textContent = '📦';
+  $('hdrTitle').textContent = 'เบิกของอุปโภคบริโภค';
+  loadSetup();
+}
+
+/* ---------- WATER (บันทึกส่งน้ำดื่ม) ---------- */
+let wBuildingDraft = null, wBuilding = null;
+let wData = {};   // { floor: qty }
+
+async function startWater(){
+  if (!canWater()){ toast('บัญชีนี้ไม่มีสิทธิ์บันทึกส่งน้ำ · ติดต่อ GNR Admin'); return; }
+  $('hdrIcon').textContent = '🚰';
+  $('hdrTitle').textContent = 'บันทึกส่งน้ำดื่ม';
+  wBuilding = null; wBuildingDraft = null; wData = {};
+  show('scWBuilding');
+  if (!setup.buildings.length){
+    $('wBldGrid').innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลดข้อมูล…</div>';
+    try {
+      const r = await gasGet('getWithdrawSetup');
+      if(!r.ok) throw new Error('setup failed');
+      setup = r;
+    } catch(e){
+      $('wBldGrid').innerHTML = '<div class="loading">โหลดข้อมูลไม่ได้ ลองใหม่อีกครั้ง</div>';
+      return;
+    }
+  }
+  renderWBuildings();
+}
+function renderWBuildings(){
+  $('wBldConfirm').disabled = !wBuildingDraft;
+  $('wBldGrid').innerHTML = setup.buildings.map(b =>
+    `<div class="bld-opt ${wBuildingDraft===b?'sel':''}" data-b="${b}" onclick="wPickBuilding('${b.replace(/'/g,"\\'")}')"><span class="ic">🏢</span>${b}</div>`
+  ).join('');
+}
+function wPickBuilding(b){
+  wBuildingDraft = b;
+  document.querySelectorAll('#wBldGrid .bld-opt').forEach(el => el.classList.toggle('sel', el.dataset.b===b));
+  $('wBldConfirm').disabled = false;
+}
+function wConfirmBuilding(){
+  if(!wBuildingDraft) return;
+  wBuilding = wBuildingDraft; wData = {};
+  goWFloors();
+}
+function goWBuilding(){ show('scWBuilding'); renderWBuildings(); }
+
+function goWFloors(){
+  show('scWFloors');
+  $('wBldName').textContent = wBuilding;
+  $('wDate').value = todayKey();
+  $('footWater').style.display='flex';
+  renderWFloors();
+  updateWSummary();
+}
+function renderWFloors(){
+  const floors = setup.floors[wBuilding] || [];
+  if(!floors.length){
+    $('wFloorList').innerHTML = '<div class="loading">อาคารนี้ยังไม่ได้ตั้งค่าชั้น · ตั้งค่าได้ที่ระบบหลัก (Admin › QR)</div>';
+    return;
+  }
+  $('wFloorList').innerHTML = floors.map(fl => {
+    const q = wData[fl] || 0;
+    const flEsc = String(fl).replace(/'/g,"\\'");
+    return `<div class="wfl-row ${q>0?'has-qty':''}" data-floor="${fl}">
+      <span class="wname">ชั้น ${fl}</span>
+      <span class="qty-ctrl">
+        <button onclick="wAdj('${flEsc}',-1)">−</button>
+        <input type="number" min="0" step="1" inputmode="numeric" value="${q}" onkeydown="blockDec(event)" oninput="wSet('${flEsc}', this.value)">
+        <button onclick="wAdj('${flEsc}',1)">+</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+function wAdj(fl, d){
+  wData[fl] = Math.max(0, (wData[fl]||0) + d);
+  renderWFloors();
+  updateWSummary();
+}
+function wSet(fl, v){
+  wData[fl] = Math.max(0, Math.round(Number(v)||0));
+  const row = document.querySelector(`.wfl-row[data-floor="${fl}"]`);
+  if(row) row.classList.toggle('has-qty', wData[fl] > 0);
+  updateWSummary();
+}
+function updateWSummary(){
+  let total=0, floors=0;
+  Object.keys(wData).forEach(fl => { const q=wData[fl]||0; if(q>0){ total+=q; floors++; } });
+  $('wGrandTotal').textContent = total;
+  $('wGrandFloors').textContent = floors;
+  $('wUnitLabel').textContent = $('wUnit').value;
+  $('wSubmitBtn').disabled = total === 0;
+}
+
+async function submitWater(){
+  const floors = Object.keys(wData).filter(fl => (wData[fl]||0) > 0).map(fl => ({ floor: fl, qty: wData[fl] }));
+  if(!floors.length){ toast('กรุณากรอกจำนวนอย่างน้อย 1 ชั้น'); return; }
+  const btn = $('wSubmitBtn'); btn.disabled=true; btn.textContent='⏳ กำลังบันทึก…';
+  try {
+    const r = await gasPost('logWater', {
+      building: wBuilding,
+      delivery_date: $('wDate').value || todayKey(),
+      unit: $('wUnit').value,
+      operator: user.name,
+      note: ($('wNote').value||'').trim(),
+      floors,
+    });
+    if(!r.ok) throw new Error(r.error||'บันทึกไม่สำเร็จ');
+    $('wDoneText').textContent = `${wBuilding} · รวม ${r.total_qty} ${$('wUnit').value} · ${r.lines} ชั้น`;
+    $('wDoneId').textContent = 'เลขที่บันทึก: ' + r.log_id;
+    wData = {}; $('wNote').value='';
+    show('scWDone');
+  } catch(e){
+    toast('บันทึกไม่สำเร็จ: '+e.message);
+  } finally {
+    btn.disabled=false; btn.textContent='บันทึกการส่ง';
+  }
+}
+
 function doLogout(){
   // เตือนถ้ามีรายการค้างที่ยังไม่ส่ง
-  const hasUnsent = Object.keys(data||{}).length > 0 &&
-    !document.getElementById('scDone').classList.contains('active');
+  const hasUnsent = (Object.keys(data||{}).length > 0 || Object.values(wData||{}).some(q=>q>0)) &&
+    !document.getElementById('scDone').classList.contains('active') &&
+    !document.getElementById('scWDone').classList.contains('active');
   const msg = hasUnsent ? 'มีรายการที่ยังไม่ได้ส่ง ต้องการออกจากระบบหรือไม่? (รายการจะหายไป)' : 'ออกจากระบบ?';
   if(!confirm(msg)) return;
   user=null; selectedBuilding=null; selectedBuildingDraft=null; currentFloor=null; data={}; floorDraft={};
+  wBuilding=null; wBuildingDraft=null; wData={};
+  $('hdrIcon').textContent='🏢'; $('hdrTitle').textContent='ระบบบริการกลาง 3';
+  $('hdrSub').textContent='สำนักงาน NTL · บริการกลาง 3';
   $('whoBox').style.display='none';
   $('inUser').value=''; $('inPass').value=''; $('loginErr').textContent='';
-  const pt=$('passToggle'); if(pt){ $('inPass').type='password'; pt.textContent='👁'; pt.classList.remove('on'); pt.setAttribute('aria-label','แสดงรหัสผ่าน'); }
   show('scLogin');
 }
 </script>
